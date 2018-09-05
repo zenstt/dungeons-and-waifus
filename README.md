@@ -25,14 +25,15 @@ Then 2 buttons bellow, basic stuff huh.
 
 #### Player menu
 (See player menu pic)
-"
+
 Here we have a side menu with account name on top.
+
 Followed by "Create new character" option
 
-On the center, we have the characters created with a play button on the side
+On the center, we have the characters created with a play button on the side.
+
 Or "No characters created" text will appears.
-When you 
-"
+
 * Create new character - This will redirect you to create character menu
 * Play button - This will redirect you to play menu
 
@@ -45,3 +46,29 @@ Just typical register form.
 * Repeat password
 * Register (Button) - This will register the user and redirect to main player menu
 * Log in (Button) - This will redirect to login
+
+---
+## Not ordered
+Map is full of boxes as positions
+Player will be on center box
+Player can only see certain number of boxes arround
+Mobs, chest and stuff spawn near players.
+Update only when a player is near
+Update = Mobs move, player move, some changes
+Update tick global on server every 2 seconds?
+Check what will update
+Despawn when can't update (players too far)
+Near = 1.5 times boxes of vision
+If something updated on any player vision, server send update by soquet
+Limited movements on player by time (like 1s)
+Stats
+Classes
+Races?
+Weapons and armor
+Items (consumables)
+Health and Mana
+Exp
+Levels
+
+
+
