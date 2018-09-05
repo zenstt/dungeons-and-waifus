@@ -49,26 +49,23 @@ Just typical register form.
 
 ---
 ## Not ordered
-Map is full of boxes as positions
-Player will be on center box
-Player can only see certain number of boxes arround
-Mobs, chest and stuff spawn near players.
-Update only when a player is near
-Update = Mobs move, player move, some changes
-Update tick global on server every 2 seconds?
-Check what will update
-Despawn when can't update (players too far)
-Near = 1.5 times boxes of vision
-If something updated on any player vision, server send update by soquet
-Limited movements on player by time (like 1s)
-Stats
-Classes
-Races?
-Weapons and armor
-Items (consumables)
-Health and Mana
-Exp
-Levels
-
-
-
+* Map is full of boxes as positions
+* Player will be on center box
+* Player can only see certain number of boxes arround
+* Mobs, chest and stuff spawn near players.
+* Update only when a player is near
+* Update = Mobs move, player move, some changes
+* Update tick global on server every 2 seconds?
+* Check what will update
+* Despawn when can't update (players too far)
+* Near = 1.5 times boxes of vision
+* If something updated on any player vision, server send update by soquet
+* Limited movements on player by time (like 1s)
+* Stats
+* Classes
+* Races?
+* Weapons and armor
+* Items (consumables)
+* Health and Mana
+* Exp
+* Levels
