@@ -5,6 +5,11 @@ You need to survive on a world full of waifus that want to kill you. (You can ca
 
 Your objective is to get stuff to be stronger and defeat stronger waifus.
 
+## Getting started
+This is a node server game
+You can either "npm run" or "node server.js" to start it.
+Then, you can check the page on localhost:8080
+
 ---
 ## Ideas
 I'll write here all that I need to know for making this proyect
