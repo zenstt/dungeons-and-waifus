@@ -1,13 +1,48 @@
 <html>
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>Document</title>
-	<link rel="stylesheet" href="./css/style.css">
+	<title>Dungeons and waifus</title>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+	 crossorigin="anonymous">
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+	 crossorigin="anonymous"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+	 crossorigin="anonymous"></script>
+	<!-- <link rel="stylesheet" href="./css/style.css"> -->
 </head>
+
 <body>
-	Hello world!
+	<div class="text-center d-flex align-items-center justify-content-center" style="height: 100%;">
+		<div class="col-lg-5">
+			<h1 class="h1 mb-1">Dungeons and Waifus</h1>
+			<div class="card">
+				<div class="card-body">
+					<form role="form">
+						<div class="form-group">
+							<label for="inputUser" class="sr-only">User or Email address</label>
+							<input type="text" id="inputUser" class="form-control" placeholder="User or Email address" required="" autofocus="">
+						</div>
+						<div class="form-group">
+							<label for="inputPassword" class="sr-only">Password</label>
+							<input type="password" id="inputPassword" class="form-control" placeholder="Password" required="">
+							<input type="checkbox" value="remember-me" id="rememberMe"> Remember me
+						</div>
+						<div class="form-group">
+							<div id="textError" class="alert-danger" style="display: none"></div>
+						</div>
+						<button class="btn btn-lg btn-primary btn-block" type="submit" id="signIn">Sign in</button>
+					</form>
+					<a href="/register" class="text-muted">No account? Register here!</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="./js/index.js"></script>
 </body>
-	<script src="./js/script.js"></script>
+
 </html>
