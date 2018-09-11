@@ -65,7 +65,7 @@ function play_controller($scope, $http, $stateParams, $state) {
 
     function startGame() {
         console.log("connectiong")
-        socket = io.connect(ip, {
+        socket = io.connect('/', {
             query: {
                 token: localStorage.getItem('token'),
                 char: $stateParams.char_id

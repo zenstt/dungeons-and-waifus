@@ -27,7 +27,7 @@ function default_petition(type, url, req, cb, options) {
     } else {
         req.token = localStorage.getItem('token');
     }
-    (options.http || http)[type](ip + url, req).then(function (data) {
+    (options.http || http)[type](url, req).then(function (data) {
         if (data && data.data && data.data.status == 'ok') {
             cb(data.data);
         } else {
