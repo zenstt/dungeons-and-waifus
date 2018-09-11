@@ -5,7 +5,7 @@ var bodyParser = require('body-parser');
 var moment = require('moment');
 var app = express();
 var server = require('http').Server(app);
-var Lazy = require('lazy.js')
+// var Lazy = require('lazy.js')
 
 var io = require('socket.io')(server);
 
