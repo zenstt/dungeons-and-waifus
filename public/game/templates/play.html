@@ -1,0 +1,16 @@
+<div class="container-fluid p-0">
+    <section class="p-3 col-lg-12" id="about">
+        <div class="col-lg-12">
+            <h2 class="mb-0">Play </h2>
+        </div>
+        <hr>
+        <div class="grid">
+            <div class="row"  ng-repeat="box in map track by $index">
+                <div class="box" ng-repeat="box2 in box track by $index">
+                    <div class="inner">{{box2}}</div>
+                </div>
+            </div>
+            X:{{data.position.x}} Y: {{data.position.y}}
+        </div>
+    </section>
+</div>

@@ -1,0 +1,29 @@
+<div class="container-fluid p-0">
+    <section class="p-3 col-lg-12" id="about">
+        <div class="col-lg-12">
+            <h2 class="mb-0">Character List </h2>
+        </div>
+        <hr>
+        <br>
+        <div class="col-lg-12">
+            <table class="table table-bordered table-sm">
+                <tr>
+                    <th></th>
+                    <th class="text-center">Name</th>
+                    <th class="text-center">Class</th>
+                    <th class="text-center">Level</th>
+                    <th></th>
+                </tr>
+                <tr ng-repeat="char in characters">
+                    <td style="width:20px;" class="text-center align-middle">
+                        <img class="rounded-circle img-fluid img-responsive" src="img/profile.jpg" alt="Profile picture" style="max-width: 50px;">
+                    </td>
+                    <td class="text-center align-middle"><span>{{char.name}}</span></td>
+                    <td class="text-center align-middle"><span>{{char.class}}</span></td>
+                    <td class="text-center align-middle"><span>{{char.level}}</span></td>
+                    <td class="text-center align-middle"><button class="btn btn-block btn-success" ng-click="playCharacter(char)">Play</button></td>
+                </tr>
+            </table>
+        </div>
+    </section>
+</div>

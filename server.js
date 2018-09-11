@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var moment = require('moment');
 var app = express();
 var server = require('http').Server(app);
+var Lazy = require('lazy.js') 
 
 var port = process.env.PORT || 8080;
 
@@ -13,6 +14,7 @@ var func = require('./functions_server')
 
 app.set('view engine', 'ejs');
 
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
@@ -23,16 +25,77 @@ app.use(express.static(__dirname + '/public'));
 var SECRET = 'Its a secret';
 var loggedUsers = {};
 
+var max_x = 100;
+var max_y = 100;
+
+
 app.get('/', function (req, res) {
 	res.render('index');
 });
-app.post('/register', (req, res) => {
-	if (body.user && body.pass && body.email) {
 
-	} else {
-		return leave(res, 'Se necesita usuario, contraseña y Email');
+app.get('/restricted', middleWareToken, (req, res) => {
+	let body = req.query;
+	if (!body.req) {
+		console.log(req.user, "Ha enviado una petición GET a '/restricted, pero no tenía body.req", body);
+		return leave(res, 'Malformed petition');
+	}
+	console.log(req.user, "pidiendo GET en '/restricted", body.req);
+	switch (body.req) {
+		case 'char_list':
+			if (req.user) {
+				let char_list = func.getCharList(req.user);
+				return leaveOk(res, char_list)
+			} else {
+				return leave(res, 'Error getting user')
+			}
+		default:
+			return leave(res, 'Ilegal petition');
 	}
 });
+
+app.post('/restricted', middleWareToken, (req, res) => {
+	let body = req.body;
+	if (!body.req) {
+		console.log(req.user, "Ha enviado una petición GET a '/restricted, pero no tenía body.req", body);
+		return leave(res, 'Malformed petition');
+	}
+	console.log(req.user, "pidiendo GET en '/restricted", body.req);
+	switch (body.req) {
+		case 'enter_game':
+			if (body.char_id && req.user) {
+				let char = func.getCharList(req.user, body.char_id)
+				if (char) {
+					if (!char.position || (!char.position.x && char.position.x !== 0) || (!char.position.y && char.position.y !== 0)) {
+						char.position = {
+							x: func.getRandomInt(0, max_x),
+							y: func.getRandomInt(0, max_y)
+						}
+					}
+					return leaveOk(res, char);
+				} else {
+					return leave(res, 'Cannot find character');
+				}
+			} else {
+				return leave(res, 'Error getting character');
+			}
+		default:
+			return leave(res, 'Ilegal petition');
+	}
+
+});
+
+
+
+app.post('/register', (req, res) => {
+	if (body.user && body.pass && body.email) {
+		/** @todo */
+	} else {
+		return leave(res, 'Need user, password and email');
+	}
+});
+
+
+
 app.post('/logIn', (req, res) => {
 	let body = req.body;
 	console.log("Alguien tratando de hacer logIn con", body);
@@ -54,25 +117,30 @@ app.post('/logIn', (req, res) => {
 });
 
 function middleWareToken(req, res, next) {
+	req.user = 'admin'
 	return next(); // Para saltarse las comprobaciones durante las pruebas...
 	let token = req.body.token || req.headers.token || null;
-	if (token) {
+	console.log('req.headers: ', req.headers);
+	console.log('req.body: ', req.body);
+	console.log("token:", token, typeof token)
+	if (token && token) {
 		let verifyTok = null;
 		try {
 			verifyTok = jwt.verify(token, SECRET);
 		} catch (err) {
 			console.log("Error al verificar el token", err);
-			return leave(res, 'Error al verificar la sesión')
+			return leave(res, 'Error on token verification')
 		}
+		console.log('verifyTok: ', verifyTok);
 		if (verifyTok && loggedUsers[verifyTok.u] && loggedUsers[verifyTok.u].t > moment().valueOf()) {
 			loggedUsers[verifyTok.u].t = moment().add(48, 'hours').valueOf()
 			req.user = verifyTok.u;
 			next();
 		} else {
-			return leave(res, 'Sesión caducada')
+			return leave(res, 'Session expired')
 		}
 	} else {
-		return leave(res, 'Sesión caducada')
+		return leave(res, 'Session expired')
 	}
 }
 
