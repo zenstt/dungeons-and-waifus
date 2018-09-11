@@ -21,6 +21,25 @@ var char_list = {
     }
 }
 
+function moveChar(move,user,char){
+    if (char_list[user] && char_list[user][char]){
+        if (move == 0){ // Left
+            char_list[user][char].position.x -= 1
+        } else if (move == 1){ // Up
+            char_list[user][char].position.y -= 1
+        } else if (move == 2){ // Right
+            char_list[user][char].position.x += 1
+        } else if (move == 3){ // Down
+            char_list[user][char].position.y += 1
+        } else {
+            return null;
+        }
+        return char_list[user][char];
+    } else {
+        return null;
+    }
+}
+
 function isValidUser(user, pass) {
     /** @todo Pedirlo a una BBDD */
     if (user == 'admin' && pass == 'admin') {
@@ -59,5 +78,6 @@ function getRandomInt(min, max) {
 module.exports = {
     isValidUser: isValidUser,
     getCharList: getCharList,
-    getRandomInt: getRandomInt
+    getRandomInt: getRandomInt,
+    moveChar:moveChar
 }

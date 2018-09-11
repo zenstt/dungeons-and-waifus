@@ -51,31 +51,87 @@ function play_controller($scope, $http, $stateParams, $state) {
         return;
     }
 
+    let socket = null;
+
+
     $scope.move = move;
 
-    $(document).keyup(function (e) {
-        if (e.keyCode == 65 || e.keyCode == 37){
-            // a 65
-            // 37 <
-            console.log('<')
-        } else if (e.keyCode == 87 || e.keyCode == 38){
-            // w 87
-            // 38 ^
-            console.log('^')
-        } else if (e.keyCode == 68 || e.keyCode == 39){
-            // d 68
-            // 39 >
-            console.log('>')
-        } else if (e.keyCode == 83 || e.keyCode == 40){
-            // s 83
-            // 40 v
-            console.log('v')
-        }
-
-    })
 
 
     let char_id = $stateParams.char_id;
+    let max = 15;
+
+    let arr_map = [];
+
+    function startGame() {
+        console.log("connectiong")
+        socket = io.connect(ip, {
+            query: {
+                token: localStorage.getItem('token'),
+                char: $stateParams.char_id
+            }
+        });
+
+        socket.on('error', function (data) {
+            alert(data);
+            socket.disconnect();
+            $state.go('char_list');
+            return;
+        });
+
+
+        $(document).keyup(function (e) {
+            let move = false;
+            if (e.keyCode == 65 || e.keyCode == 37) {
+                // a 65 // 37 <
+                move = 0;
+            } else if (e.keyCode == 87 || e.keyCode == 38) {
+                // w 87 // 38 ^
+                move = 1;
+            } else if (e.keyCode == 68 || e.keyCode == 39) {
+                // d 68 // 39 >
+                move = 2;
+            } else if (e.keyCode == 83 || e.keyCode == 40) {
+                // s 83 // 40 v
+                move = 3;
+            }
+            if (move | move === 0) {
+                socket.emit('move', { move: move }, function (data_res) {
+                    if (data_res) {
+                        setTimeout(function () {
+                            $scope.$apply(function () {
+                                $scope.data = data_res.char;
+                            })
+                            generateMap(data_res.char)
+                        })
+                    }
+                    console.log(data_res)
+                });
+            }
+
+        })
+    }
+
+    function generateMap(charInfo) {
+        arr_map = [];
+        for (let i = 0; i < max; i++) {
+            let topush = [];
+            for (let j = 0; j < max; j++) {
+                let id = (charInfo.position.x - 7 + j) + '_' + (charInfo.position.y - 7 + i)
+                if (j == 7 && i == 7) {
+                    topush.push({ id: id, val: '@' });
+                } else {
+                    topush.push({ id: id });
+                }
+            }
+            arr_map.push(topush);
+        }
+        setTimeout(function () {
+            $scope.$apply(function () {
+                $scope.map = arr_map;
+            })
+        })
+    }
 
     default_petition('post', null, { req: 'enter_game', char_id: char_id }, function (data) {
         if (data) {
@@ -83,6 +139,9 @@ function play_controller($scope, $http, $stateParams, $state) {
             setTimeout(function () {
                 $scope.$apply(function () {
                     $scope.data = data.data;
+                    generateMap(data.data);
+
+                    startGame();
                 })
             })
         } else {
@@ -91,24 +150,12 @@ function play_controller($scope, $http, $stateParams, $state) {
         }
     }, { http: $http });
 
-    let max = 15;
-
-    let arr_map = [];
-
-    for (let i = 0; i < max; i++) {
-        let topush = [];
-        for (let j = 0; j < max; j++) {
-            if (j == 7 && i == 7) {
-                topush.push('@');
-            } else {
-                topush.push(null);
-            }
-        }
-        arr_map.push(topush);
-    }
 
 
-    $scope.map = arr_map;
+
+
+
+
 
 
     function move(event) {

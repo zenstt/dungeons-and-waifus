@@ -5,7 +5,10 @@ var bodyParser = require('body-parser');
 var moment = require('moment');
 var app = express();
 var server = require('http').Server(app);
-var Lazy = require('lazy.js') 
+var Lazy = require('lazy.js')
+
+var io = require('socket.io')(server);
+
 
 var port = process.env.PORT || 8080;
 
@@ -31,6 +34,58 @@ var max_y = 100;
 
 app.get('/', function (req, res) {
 	res.render('index');
+});
+
+io.use(function (socket, next) {
+	if (socket.handshake.query && socket.handshake.query.token && socket.handshake.query.char) {
+		jwt.verify(socket.handshake.query.token, SECRET, function (err, decoded) {
+			if (err) return next(new Error('Authentication error'));
+			socket.user_data = decoded;
+			socket.user_data.char = socket.handshake.query.char;
+			next();
+		});
+	} else {
+		next(new Error('Authentication error'));
+	}
+})
+
+io.on('connection', function (socket) {
+	console.log('User connected to game:',socket.user_data.u,' with char:',socket.user_data.char);
+
+	
+	// let clients = io.sockets.clients(); 			// Lista de todos los sockets conectados actualmente
+	// socket.emit('id',{val:"val"}) 				// Emite al usuario (El del socket)
+	// socket.broadcast.emit('id',{val:"val"}) 		// Emite a todos los usuarios excepto el emisor
+	// io.sockets.emit('id', {val:"val"});			// Emite a todos los usuarios
+	
+	// socket.join('some room') 					// Añade el socket a una sala
+	// socket.to('some room').emit({val:"val"})		// Emite a todos los usuarios de una sala excepto el emisor
+	// io.to('some room').emit({val:"val"}); 		// Emite a todos los usuarios de una sala
+	// socket.leave("some room")					// Elimina a un socket de una sala
+	
+	// io.to(socketId).emit('id', {val:"val"}); 	// Emite a un socket en concreto
+
+	// socket.on('id',function(data,fc){ 			// Recibe emit del cliente a 'id'
+	// 	// data = Información emitida por el cliente
+	// 	// fc 	= Respuesta del servidor ( fn({val:'val'}); )
+	// });
+	
+	
+	
+	
+	let clients = io.sockets.clients();
+
+	socket.on('move',function(data,fn){
+		if (data.move || data.move === 0){
+			let newChar = func.moveChar(data.move,socket.user_data.u,socket.user_data.char);
+			console.log(newChar,data)
+			fn({char:newChar});
+		}
+	})
+
+	socket.on('disconnect', function () {
+		console.log('user disconnected');
+	});
 });
 
 app.get('/restricted', middleWareToken, (req, res) => {
@@ -86,6 +141,7 @@ app.post('/restricted', middleWareToken, (req, res) => {
 
 
 
+
 app.post('/register', (req, res) => {
 	if (body.user && body.pass && body.email) {
 		/** @todo */
@@ -117,8 +173,9 @@ app.post('/logIn', (req, res) => {
 });
 
 function middleWareToken(req, res, next) {
-	req.user = 'admin'
-	return next(); // Para saltarse las comprobaciones durante las pruebas...
+	// req.user = 'admin'
+	// return next(); // Para saltarse las comprobaciones durante las pruebas...
+
 	let token = req.body.token || req.headers.token || null;
 	console.log('req.headers: ', req.headers);
 	console.log('req.body: ', req.body);
@@ -128,7 +185,7 @@ function middleWareToken(req, res, next) {
 		try {
 			verifyTok = jwt.verify(token, SECRET);
 		} catch (err) {
-			console.log("Error al verificar el token", err);
+			console.log("err:", err)
 			return leave(res, 'Error on token verification')
 		}
 		console.log('verifyTok: ', verifyTok);
