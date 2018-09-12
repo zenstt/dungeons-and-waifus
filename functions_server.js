@@ -8,7 +8,7 @@ var char_list = {
     admin: {
         32: {
             id: 32,
-            name: 'testiñoncio',
+            name: 'Dañoncio',
             class: 'archer',
             level: 13,
             hp: 100,
@@ -20,7 +20,7 @@ var char_list = {
         },
         33: {
             id: 33,
-            name: 'test',
+            name: 'Harrrru',
             class: 'warro',
             level: 12,
             hp: 100,
@@ -32,7 +32,19 @@ var char_list = {
         },
         35: {
             id: 35,
-            name: 'cacota',
+            name: 'Lorenzon',
+            class: 'warro',
+            level: 12,
+            hp: 100,
+            sp: 100,
+            position: {
+                x: null,
+                y: null
+            }
+        },
+        36: {
+            id: 36,
+            name: 'Nelsront',
             class: 'warro',
             level: 12,
             hp: 100,

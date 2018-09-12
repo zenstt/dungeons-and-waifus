@@ -86,6 +86,7 @@ function play_controller($scope, $http, $stateParams, $state) {
         });
 
         socket.on('some_move', function (data) {
+            console.log('data: ', data);
             
             let found = false;
             if (data.chars) {
@@ -166,7 +167,7 @@ function play_controller($scope, $http, $stateParams, $state) {
                     if (next) {
                         for (let char of next) {
                             if (char.position && char.position.x == x && char.position.y == y) {
-                                found = 'O';
+                                found = char.name[0];
                                 break;
                             }
                         }

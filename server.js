@@ -56,10 +56,10 @@ function getNearUsers(arr_clients, user_data, newChar, disconnect) {
 			}
 			let char = func.getCharList(n.user_data.u, n.user_data.char);
 			if (
-				char.position.x > newChar.position.x - 8 &&
-				char.position.x < newChar.position.x + 8 &&
-				char.position.y > newChar.position.y - 8 &&
-				char.position.y < newChar.position.y + 8
+				char.position.x > newChar.position.x - 9 &&
+				char.position.x < newChar.position.x + 9 &&
+				char.position.y > newChar.position.y - 9 &&
+				char.position.y < newChar.position.y + 9
 			) {
 				if (disconnect) {
 					n.emit('some_move', { dis: [newChar] });
