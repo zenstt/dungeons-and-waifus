@@ -5,7 +5,7 @@ var bodyParser = require('body-parser');
 var moment = require('moment');
 var app = express();
 var server = require('http').Server(app);
-// var Lazy = require('lazy.js')
+var Lazy = require('lazy.js')
 
 var io = require('socket.io')(server);
 
@@ -28,8 +28,8 @@ app.use(express.static(__dirname + '/public'));
 var SECRET = 'Its a secret';
 var loggedUsers = {};
 
-var max_x = 100;
-var max_y = 100;
+var max_x = 10;
+var max_y = 10;
 
 
 app.get('/', function (req, res) {
@@ -48,43 +48,104 @@ io.use(function (socket, next) {
 		next(new Error('Authentication error'));
 	}
 })
-
+function getNearUsers(arr_clients, user_data, newChar, disconnect) {
+	return Lazy(arr_clients)
+		.filter(function (n) {
+			if (n.user_data.u == user_data.u && n.user_data.char == user_data.char) {
+				return false;
+			}
+			let char = func.getCharList(n.user_data.u, n.user_data.char);
+			if (
+				char.position.x > newChar.position.x - 8 &&
+				char.position.x < newChar.position.x + 8 &&
+				char.position.y > newChar.position.y - 8 &&
+				char.position.y < newChar.position.y + 8
+			) {
+				if (disconnect) {
+					n.emit('some_move', { dis: [newChar] });
+				} else {
+					n.emit('some_move', { chars: [newChar] });
+				}
+				return true;
+			} else {
+				return false;
+			}
+		})
+		.map(function (n) {
+			let char = func.getCharList(n.user_data.u, n.user_data.char);
+			return char;
+		})
+		.toArray();
+}
 io.on('connection', function (socket) {
-	console.log('User connected to game:',socket.user_data.u,' with char:',socket.user_data.char);
+	console.log('User connected to game:', socket.user_data.u, ' with char:', socket.user_data.char);
 
-	
+
 	// let clients = io.sockets.clients(); 			// Lista de todos los sockets conectados actualmente
 	// socket.emit('id',{val:"val"}) 				// Emite al usuario (El del socket)
 	// socket.broadcast.emit('id',{val:"val"}) 		// Emite a todos los usuarios excepto el emisor
 	// io.sockets.emit('id', {val:"val"});			// Emite a todos los usuarios
-	
+
 	// socket.join('some room') 					// Añade el socket a una sala
 	// socket.to('some room').emit({val:"val"})		// Emite a todos los usuarios de una sala excepto el emisor
 	// io.to('some room').emit({val:"val"}); 		// Emite a todos los usuarios de una sala
 	// socket.leave("some room")					// Elimina a un socket de una sala
-	
+
 	// io.to(socketId).emit('id', {val:"val"}); 	// Emite a un socket en concreto
 
 	// socket.on('id',function(data,fc){ 			// Recibe emit del cliente a 'id'
 	// 	// data = Información emitida por el cliente
 	// 	// fc 	= Respuesta del servidor ( fn({val:'val'}); )
 	// });
-	
-	
-	
-	
-	let clients = io.sockets.clients();
 
-	socket.on('move',function(data,fn){
-		if (data.move || data.move === 0){
-			let newChar = func.moveChar(data.move,socket.user_data.u,socket.user_data.char);
-			console.log(newChar,data)
-			fn({char:newChar});
+
+
+
+	let arr_clients = func.findClientsSocket(io);
+	let newChar = func.getCharList(socket.user_data.u, socket.user_data.char);
+	let users_selected = getNearUsers(arr_clients, socket.user_data, newChar);
+
+	console.log(users_selected)
+	socket.emit('some_move', { chars: users_selected });
+
+	socket.on('move', function (data, fn) {
+		if (data.move || data.move === 0) {
+			let arr_clients = func.findClientsSocket(io);
+			let newChar = func.moveChar(data.move, socket.user_data.u, socket.user_data.char);
+			let users_selected = getNearUsers(arr_clients, socket.user_data, newChar);
+			// let users_selected = Lazy(arr_clients)
+			// 	.filter(function (n) {
+			// 		if (n.user_data.u == socket.user_data.u && n.user_data.char == socket.user_data.char) {
+			// 			return false;
+			// 		}
+			// 		let char = func.getCharList(n.user_data.u, n.user_data.char);
+			// 		if (
+			// 			char.position.x > newChar.position.x - 8 &&
+			// 			char.position.x < newChar.position.x + 8 &&
+			// 			char.position.y > newChar.position.y - 8 &&
+			// 			char.position.y < newChar.position.y + 8
+			// 		) {
+			// 			n.emit('some_move', { chars: [newChar] });
+			// 			return true;
+			// 		} else {
+			// 			return false;
+			// 		}
+			// 	})
+			// 	.map(function (n) {
+			// 		let char = func.getCharList(n.user_data.u, n.user_data.char);
+			// 		return char;
+			// 	})
+			// 	.toArray();
+			// console.log(users_selected)
+			fn({ char: newChar, next: users_selected });
 		}
 	})
 
 	socket.on('disconnect', function () {
-		console.log('user disconnected');
+		console.log('User', socket.user_data.u, 'disconnected with char', socket.user_data.char);
+		let arr_clients = func.findClientsSocket(io);
+		let newChar = func.getCharList(socket.user_data.u, socket.user_data.char);
+		let users_selected = getNearUsers(arr_clients, socket.user_data, newChar, true);
 	});
 });
 

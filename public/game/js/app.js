@@ -20,6 +20,7 @@ var app = angular.module('dungeons_and_waifus_app', ['ui.router'])
                 controller: 'play',
                 onExit: function () {
                     $(document).off('keyup'); // Quitamos el evento al salir
+
                 }
             })
         // $locationProvider.html5Mode(true).hashPrefix('!');
@@ -52,19 +53,24 @@ function play_controller($scope, $http, $stateParams, $state) {
     }
 
     let socket = null;
-
-
     $scope.move = move;
-
-
 
     let char_id = $stateParams.char_id;
     let max = 15;
 
     let arr_map = [];
 
+    let next = [];
+    let char = null;
+
+    $scope.$on("$destroy", function () {
+        if (socket) {
+            socket.disconnect();
+        }
+    });
+
     function startGame() {
-        console.log("connectiong")
+        
         socket = io.connect('/', {
             query: {
                 token: localStorage.getItem('token'),
@@ -79,6 +85,37 @@ function play_controller($scope, $http, $stateParams, $state) {
             return;
         });
 
+        socket.on('some_move', function (data) {
+            
+            let found = false;
+            if (data.chars) {
+                for (let char of data.chars) {
+                    for (let i = 0; i < next.length; i++) {
+                        let index = next[i];
+                        if (index.id == char.id) {
+                            found = true;
+                            next[i] = char;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        next.push(char);
+                    }
+                }
+            }
+            if (data.dis) {
+                for (let char of data.dis) {
+                    for (let i = 0; i < next.length; i++) {
+                        let index = next[i];
+                        if (index.id == char.id) {
+                            next.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+            }
+            generateMap(char)
+        })
 
         $(document).keyup(function (e) {
             let move = false;
@@ -97,15 +134,17 @@ function play_controller($scope, $http, $stateParams, $state) {
             }
             if (move | move === 0) {
                 socket.emit('move', { move: move }, function (data_res) {
+                    
                     if (data_res) {
                         setTimeout(function () {
                             $scope.$apply(function () {
                                 $scope.data = data_res.char;
                             })
+                            next = data_res.next;
+                            char = data_res.char;
                             generateMap(data_res.char)
                         })
                     }
-                    console.log(data_res)
                 });
             }
 
@@ -117,11 +156,22 @@ function play_controller($scope, $http, $stateParams, $state) {
         for (let i = 0; i < max; i++) {
             let topush = [];
             for (let j = 0; j < max; j++) {
-                let id = (charInfo.position.x - 7 + j) + '_' + (charInfo.position.y - 7 + i)
+                let x = (charInfo.position.x - 7 + j);
+                let y = (charInfo.position.y - 7 + i);
+                let id = x + '_' + y;
                 if (j == 7 && i == 7) {
                     topush.push({ id: id, val: '@' });
                 } else {
-                    topush.push({ id: id });
+                    let found = null;
+                    if (next) {
+                        for (let char of next) {
+                            if (char.position && char.position.x == x && char.position.y == y) {
+                                found = 'O';
+                                break;
+                            }
+                        }
+                    }
+                    topush.push({ id: id, val: found });
                 }
             }
             arr_map.push(topush);
@@ -135,10 +185,11 @@ function play_controller($scope, $http, $stateParams, $state) {
 
     default_petition('post', null, { req: 'enter_game', char_id: char_id }, function (data) {
         if (data) {
-            console.log('data: ', data);
+            
             setTimeout(function () {
                 $scope.$apply(function () {
                     $scope.data = data.data;
+                    char = data.data;
                     generateMap(data.data);
 
                     startGame();
@@ -159,10 +210,10 @@ function play_controller($scope, $http, $stateParams, $state) {
 
 
     function move(event) {
-        console.log('event: ', event);
+        
 
     }
 
-    console.log('arr_map: ', arr_map);
+    
 
 }

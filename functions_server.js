@@ -17,6 +17,30 @@ var char_list = {
                 x: null,
                 y: null
             }
+        },
+        33: {
+            id: 33,
+            name: 'test',
+            class: 'warro',
+            level: 12,
+            hp: 100,
+            sp: 100,
+            position: {
+                x: null,
+                y: null
+            }
+        },
+        35: {
+            id: 35,
+            name: 'cacota',
+            class: 'warro',
+            level: 12,
+            hp: 100,
+            sp: 100,
+            position: {
+                x: null,
+                y: null
+            }
         }
     }
 }
@@ -75,9 +99,30 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+
+function findClientsSocket(io,roomId, namespace) {
+    let res = []
+    // the default namespace is "/"
+    let ns = io.of(namespace ||"/");
+    if (ns) {
+        for (var id in ns.connected) {
+            if(roomId) {
+                var index = ns.connected[id].rooms.indexOf(roomId);
+                if(index !== -1) {
+                    res.push(ns.connected[id]);
+                }
+            } else {
+                res.push(ns.connected[id]);
+            }
+        }
+    }
+    return res;
+}
+
 module.exports = {
     isValidUser: isValidUser,
     getCharList: getCharList,
     getRandomInt: getRandomInt,
-    moveChar:moveChar
+    moveChar:moveChar,
+    findClientsSocket:findClientsSocket
 }
