@@ -40,9 +40,14 @@ io.use(function (socket, next) {
 	if (socket.handshake.query && socket.handshake.query.token && socket.handshake.query.char) {
 		jwt.verify(socket.handshake.query.token, SECRET, function (err, decoded) {
 			if (err) return next(new Error('Authentication error'));
-			socket.user_data = decoded;
-			socket.user_data.char = socket.handshake.query.char;
-			next();
+			if (decoded && loggedUsers[decoded.u] && loggedUsers[decoded.u].t > moment().valueOf()) {
+				loggedUsers[decoded.u].t = moment().add(48, 'hours').valueOf()
+				socket.user_data = decoded;
+				socket.user_data.char = socket.handshake.query.char;
+				next();
+			} else {
+				next(new Error('Session expired'));
+			}
 		});
 	} else {
 		next(new Error('Authentication error'));
@@ -255,10 +260,10 @@ function middleWareToken(req, res, next) {
 			req.user = verifyTok.u;
 			next();
 		} else {
-			return leave(res, 'Session expired')
+			return leave(res, 'Session expired');
 		}
 	} else {
-		return leave(res, 'Session expired')
+		return leave(res, 'Session expired');
 	}
 }
 

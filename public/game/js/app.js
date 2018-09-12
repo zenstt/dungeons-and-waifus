@@ -161,7 +161,7 @@ function play_controller($scope, $http, $stateParams, $state) {
                 let y = (charInfo.position.y - 7 + i);
                 let id = x + '_' + y;
                 if (j == 7 && i == 7) {
-                    topush.push({ id: id, val: charInfo.name });
+                    topush.push({ id: id, val: charInfo.name[0] });
                 } else {
                     let found = null;
                     if (next) {
