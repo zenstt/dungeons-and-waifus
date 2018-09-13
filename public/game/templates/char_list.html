@@ -10,18 +10,27 @@
                 <tr>
                     <th></th>
                     <th class="text-center">Name</th>
+                    <th class="text-center">Gender</th>
                     <th class="text-center">Class</th>
                     <th class="text-center">Level</th>
+                    <th class="text-center">Race</th>
                     <th></th>
                 </tr>
-                <tr ng-repeat="char in characters">
+                <tr ng-repeat="char in characters" ng-if="characters.length">
                     <td style="width:20px;" class="text-center align-middle">
                         <img class="rounded-circle img-fluid img-responsive" src="img/profile.jpg" alt="Profile picture" style="max-width: 50px;">
                     </td>
                     <td class="text-center align-middle"><span>{{char.name}}</span></td>
+                    <td class="text-center align-middle"><span>{{char.gender}}</span></td>
                     <td class="text-center align-middle"><span>{{char.class}}</span></td>
                     <td class="text-center align-middle"><span>{{char.level}}</span></td>
+                    <td class="text-center align-middle"><span>{{char.race}}</span></td>
                     <td class="text-center align-middle"><button class="btn btn-block btn-success" ng-click="playCharacter(char)">Play</button></td>
+                </tr>
+                <tr ng-if="!characters.length">
+                    <td class="text-center align-middle" colspan="7">
+                        No characters created yet
+                    </td>
                 </tr>
             </table>
         </div>

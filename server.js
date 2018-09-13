@@ -5,15 +5,16 @@ var bodyParser = require('body-parser');
 var moment = require('moment');
 var app = express();
 var server = require('http').Server(app);
-var Lazy = require('lazy.js')
+var Lazy = require('lazy.js');
 
 var io = require('socket.io')(server);
 
+var func = require('./functions_server')
+var DB = require('./db')
+var conf = require('./config')
 
 var port = process.env.PORT || 8080;
 
-
-var func = require('./functions_server')
 
 app.set('view engine', 'ejs');
 
@@ -25,11 +26,16 @@ app.use(bodyParser.urlencoded({
 app.use(express.static(__dirname + '/public'));
 
 
-var SECRET = 'Its a secret';
 var loggedUsers = {};
 
 var max_x = 10;
 var max_y = 10;
+
+DB.Connect(conf.mongo_url, function () {
+	server.listen(port, function () {
+		console.log('Server Started on port ' + port)
+	});
+})
 
 
 app.get('/', function (req, res) {
@@ -38,7 +44,7 @@ app.get('/', function (req, res) {
 
 io.use(function (socket, next) {
 	if (socket.handshake.query && socket.handshake.query.token && socket.handshake.query.char) {
-		jwt.verify(socket.handshake.query.token, SECRET, function (err, decoded) {
+		jwt.verify(socket.handshake.query.token, conf.TOKEN_KEY, function (err, decoded) {
 			if (err) return next(new Error('Authentication error'));
 			if (decoded && loggedUsers[decoded.u] && loggedUsers[decoded.u].t > moment().valueOf()) {
 				loggedUsers[decoded.u].t = moment().add(48, 'hours').valueOf()
@@ -118,30 +124,6 @@ io.on('connection', function (socket) {
 			let arr_clients = func.findClientsSocket(io);
 			let newChar = func.moveChar(data.move, socket.user_data.u, socket.user_data.char);
 			let users_selected = getNearUsers(arr_clients, socket.user_data, newChar);
-			// let users_selected = Lazy(arr_clients)
-			// 	.filter(function (n) {
-			// 		if (n.user_data.u == socket.user_data.u && n.user_data.char == socket.user_data.char) {
-			// 			return false;
-			// 		}
-			// 		let char = func.getCharList(n.user_data.u, n.user_data.char);
-			// 		if (
-			// 			char.position.x > newChar.position.x - 8 &&
-			// 			char.position.x < newChar.position.x + 8 &&
-			// 			char.position.y > newChar.position.y - 8 &&
-			// 			char.position.y < newChar.position.y + 8
-			// 		) {
-			// 			n.emit('some_move', { chars: [newChar] });
-			// 			return true;
-			// 		} else {
-			// 			return false;
-			// 		}
-			// 	})
-			// 	.map(function (n) {
-			// 		let char = func.getCharList(n.user_data.u, n.user_data.char);
-			// 		return char;
-			// 	})
-			// 	.toArray();
-			// console.log(users_selected)
 			fn({ char: newChar, next: users_selected });
 		}
 	})
@@ -150,7 +132,8 @@ io.on('connection', function (socket) {
 		console.log('User', socket.user_data.u, 'disconnected with char', socket.user_data.char);
 		let arr_clients = func.findClientsSocket(io);
 		let newChar = func.getCharList(socket.user_data.u, socket.user_data.char);
-		let users_selected = getNearUsers(arr_clients, socket.user_data, newChar, true);
+		getNearUsers(arr_clients, socket.user_data, newChar, true);
+		func.removeFromLocalList(newChar);
 	});
 });
 
@@ -164,11 +147,15 @@ app.get('/restricted', middleWareToken, (req, res) => {
 	switch (body.req) {
 		case 'char_list':
 			if (req.user) {
-				let char_list = func.getCharList(req.user);
-				return leaveOk(res, char_list)
+				func.getCharListFromDb(req.user, null, function (err, char_list) {
+					console.log(char_list);
+					if (err) return leave(res, err);
+					return leaveOk(res, char_list)
+				});
 			} else {
 				return leave(res, 'Error getting user')
 			}
+			break;
 		default:
 			return leave(res, 'Ilegal petition');
 	}
@@ -184,21 +171,56 @@ app.post('/restricted', middleWareToken, (req, res) => {
 	switch (body.req) {
 		case 'enter_game':
 			if (body.char_id && req.user) {
-				let char = func.getCharList(req.user, body.char_id)
-				if (char) {
-					if (!char.position || (!char.position.x && char.position.x !== 0) || (!char.position.y && char.position.y !== 0)) {
-						char.position = {
-							x: func.getRandomInt(0, max_x),
-							y: func.getRandomInt(0, max_y)
+				func.getCharListFromDb(req.user, body.char_id, function (err, char) {
+					if (err) return leave(res, err);
+					if (char) {
+						if (!char.position || (!char.position.x && char.position.x !== 0) || (!char.position.y && char.position.y !== 0)) {
+							char.position = {
+								x: func.getRandomInt(0, max_x),
+								y: func.getRandomInt(0, max_y)
+							}
 						}
+						func.putInLocalList(char);
+						return leaveOk(res, char);
+					} else {
+						return leave(res, 'Cannot find character');
 					}
-					return leaveOk(res, char);
-				} else {
-					return leave(res, 'Cannot find character');
-				}
+
+				})
 			} else {
 				return leave(res, 'Error getting character');
 			}
+			break;
+		case 'create_char':
+			if (body.char.name && body.char.gender && body.char.race && body.char.class) {
+				let parsed = func.parseNumberCreation(body.char);
+				console.log('parsed: ', parsed);
+				if (!parsed || !parsed.gender || !parsed.race || !parsed.class) {
+					return leave(res, 'Character not valid');
+				}
+				let char_creation = {
+					user: req.user,
+					name: body.char.name,
+					gender: parsed.gender,
+					race: parsed.race,
+					class: parsed.class,
+					level: 1,
+					hp: 100,
+					sp: 100,
+					position: {
+						x: 0,
+						y: 0
+					},
+					picture: null
+				}
+				func.createChar(req.user, char_creation, function (err, status) {
+					if (err) return leave(res, err);
+					return leaveOk(res, null);
+				})
+			} else {
+				return leave(res, 'Insuficients params')
+			}
+			break;
 		default:
 			return leave(res, 'Ilegal petition');
 	}
@@ -209,8 +231,13 @@ app.post('/restricted', middleWareToken, (req, res) => {
 
 
 app.post('/register', (req, res) => {
+	let body = req.body;
+	console.log("Se ha enviado una petición de registro con body", body);
 	if (body.user && body.pass && body.email) {
-		/** @todo */
+		func.register({ user: body.user, pass: body.pass, email: body.email }, function (err, data) {
+			if (err) return leave(res, err);
+			return leaveOk(res, null);
+		});
 	} else {
 		return leave(res, 'Need user, password and email');
 	}
@@ -222,17 +249,21 @@ app.post('/logIn', (req, res) => {
 	let body = req.body;
 	console.log("Alguien tratando de hacer logIn con", body);
 	if (body && body.user && body.pass) {
-		if (func.isValidUser(body.user, body.pass)) {
-			let tokenNew = jwt.sign({ u: body.user, t: moment().valueOf() }, SECRET);
-			loggedUsers[body.user] = {
-				u: body.user,
-				tok: tokenNew,
-				t: moment().add(48, 'hours').valueOf()
+		func.isValidUser(body.user, body.pass, function (err, data) {
+			console.log('data: ', data);
+			if (err) return leave(res, err);
+			if (data) {
+				let tokenNew = jwt.sign({ u: body.user, t: moment().valueOf() }, conf.TOKEN_KEY);
+				loggedUsers[body.user] = {
+					u: body.user,
+					tok: tokenNew,
+					t: moment().add(48, 'hours').valueOf()
+				}
+				return leaveOk(res, { token: tokenNew });
+			} else {
+				return leave(res, 'Wrong user or password')
 			}
-			return leaveOk(res, { token: tokenNew });
-		} else {
-			return leave(res, 'Incorrect user or password');
-		}
+		});
 	} else {
 		return leave(res, 'No user or password sent');
 	}
@@ -243,18 +274,14 @@ function middleWareToken(req, res, next) {
 	// return next(); // Para saltarse las comprobaciones durante las pruebas...
 
 	let token = req.body.token || req.headers.token || null;
-	console.log('req.headers: ', req.headers);
-	console.log('req.body: ', req.body);
-	console.log("token:", token, typeof token)
 	if (token && token) {
 		let verifyTok = null;
 		try {
-			verifyTok = jwt.verify(token, SECRET);
+			verifyTok = jwt.verify(token, conf.TOKEN_KEY);
 		} catch (err) {
 			console.log("err:", err)
 			return leave(res, 'Error on token verification')
 		}
-		console.log('verifyTok: ', verifyTok);
 		if (verifyTok && loggedUsers[verifyTok.u] && loggedUsers[verifyTok.u].t > moment().valueOf()) {
 			loggedUsers[verifyTok.u].t = moment().add(48, 'hours').valueOf()
 			req.user = verifyTok.u;
@@ -275,7 +302,3 @@ function leaveOk(res, data) {
 	res.send({ status: 'ok', data: data || null });
 	res.end();
 }
-
-server.listen(port, function () {
-	console.log('Server Started on port ' + port)
-});

@@ -11,6 +11,11 @@ var app = angular.module('dungeons_and_waifus_app', ['ui.router'])
                 templateUrl: 'templates/char_list.html',
                 controller: 'char_list'
             })
+            .state('create_char', {
+                url: '/create_char',
+                templateUrl: 'templates/create_char.html',
+                controller: 'create_char'
+            })
             .state('play', {
                 url: '/play',
                 templateUrl: 'templates/play.html',
@@ -20,7 +25,6 @@ var app = angular.module('dungeons_and_waifus_app', ['ui.router'])
                 controller: 'play',
                 onExit: function () {
                     $(document).off('keyup'); // Quitamos el evento al salir
-
                 }
             })
         // $locationProvider.html5Mode(true).hashPrefix('!');
@@ -28,6 +32,7 @@ var app = angular.module('dungeons_and_waifus_app', ['ui.router'])
 
 app
     .controller('char_list', char_list_controller)      // Char list
+    .controller('create_char', create_char_controller)      // create_char
     .controller('play', play_controller)      // play
 
 function char_list_controller($scope, $http, $state) {
@@ -44,6 +49,34 @@ function char_list_controller($scope, $http, $state) {
             $scope.characters = data.data;
         }
     }, { http: $http });
+}
+
+function create_char_controller($scope, $http, $state) {
+
+    $scope.createChar = createChar;
+
+    $scope.char = {
+        gender: "1",
+        race: "1",
+        class: "1"
+    }
+
+    function createChar(char) {
+        if (char.name && char.gender && char.class && char.race) {
+
+            default_petition('post', null, { req: "create_char", char: char }, function (data) {
+                if (data) {
+                    $state.go('char_list');
+                }
+            }, { http: $http });
+        } else {
+            if (!char.name) {
+                alert("Your character needs a name")
+            } else {
+                alert("Complete all the form")
+            }
+        }
+    }
 }
 
 function play_controller($scope, $http, $stateParams, $state) {
@@ -70,7 +103,7 @@ function play_controller($scope, $http, $stateParams, $state) {
     });
 
     function startGame() {
-        
+
         socket = io.connect('/', {
             query: {
                 token: localStorage.getItem('token'),
@@ -87,13 +120,13 @@ function play_controller($scope, $http, $stateParams, $state) {
 
         socket.on('some_move', function (data) {
             console.log('data: ', data);
-            
+
             let found = false;
             if (data.chars) {
                 for (let char of data.chars) {
                     for (let i = 0; i < next.length; i++) {
                         let index = next[i];
-                        if (index.id == char.id) {
+                        if (index.id == char.id && index.user == char.user) {
                             found = true;
                             next[i] = char;
                             break;
@@ -108,7 +141,7 @@ function play_controller($scope, $http, $stateParams, $state) {
                 for (let char of data.dis) {
                     for (let i = 0; i < next.length; i++) {
                         let index = next[i];
-                        if (index.id == char.id) {
+                        if (index.id == char.id && index.user == char.user) {
                             next.splice(i, 1);
                             break;
                         }
@@ -135,7 +168,7 @@ function play_controller($scope, $http, $stateParams, $state) {
             }
             if (move | move === 0) {
                 socket.emit('move', { move: move }, function (data_res) {
-                    
+
                     if (data_res) {
                         setTimeout(function () {
                             $scope.$apply(function () {
@@ -148,7 +181,6 @@ function play_controller($scope, $http, $stateParams, $state) {
                     }
                 });
             }
-
         })
     }
 
@@ -161,18 +193,28 @@ function play_controller($scope, $http, $stateParams, $state) {
                 let y = (charInfo.position.y - 7 + i);
                 let id = x + '_' + y;
                 if (j == 7 && i == 7) {
-                    topush.push({ id: id, val: charInfo.name[0] });
-                } else {
-                    let found = null;
-                    if (next) {
-                        for (let char of next) {
-                            if (char.position && char.position.x == x && char.position.y == y) {
-                                found = char.name[0];
-                                break;
+                    let tooltip = charInfo.name + "<br>" +
+                        charInfo.gender + " " + charInfo.race + '<br>'+
+                        'Level '+charInfo.level+' '+charInfo.class
+                        topush.push({ id: id, val: charInfo.name[0], title: tooltip,style:{cursor:"help"} });
+                    } else {
+                        let found = null;
+                        if (next) {
+                            for (let char of next) {
+                                if (char.position && char.position.x == x && char.position.y == y) {
+                                    found = char;
+                                    break;
+                                }
                             }
                         }
+                        if (found) {
+                            let tooltip = found.name + "<br>" +
+                            found.gender + " " + found.race + '<br>'+
+                            'Level '+found.level+' '+found.class
+                        topush.push({ id: id, val: found.name[0], title: tooltip,style:"" });
+                    } else {
+                        topush.push({ id: id, val: null, title: null });
                     }
-                    topush.push({ id: id, val: found });
                 }
             }
             arr_map.push(topush);
@@ -181,12 +223,16 @@ function play_controller($scope, $http, $stateParams, $state) {
             $scope.$apply(function () {
                 $scope.map = arr_map;
             })
+            $('[data-toggle="tooltip"]').tooltip('dispose');
+            $('[data-toggle="tooltip"]').tooltip({
+                "data-html": "true"
+            });
         })
     }
 
     default_petition('post', null, { req: 'enter_game', char_id: char_id }, function (data) {
         if (data) {
-            
+
             setTimeout(function () {
                 $scope.$apply(function () {
                     $scope.data = data.data;
@@ -211,10 +257,10 @@ function play_controller($scope, $http, $stateParams, $state) {
 
 
     function move(event) {
-        
+
 
     }
 
-    
+
 
 }

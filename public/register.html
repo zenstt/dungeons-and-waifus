@@ -17,32 +17,39 @@
 </head>
 
 <body>
-	<div class="text-center d-flex align-items-center justify-content-center" style="height: 100%;">
+	<div class="d-flex align-items-center justify-content-center" style="height: 100%;">
 		<div class="col-lg-5">
-			<h1 class="h1 mb-1">Dungeons and Waifus</h1>
+			<h1 class="h1 mb-1 text-center">Dungeons and Waifus</h1>
 			<div class="card">
 				<div class="card-body">
 					<form role="form">
 						<div class="form-group">
-							<label for="inputUser" class="sr-only">User</label>
+							<label for="inputUser">Email</label>
+							<input type="email" id="inputEmail" class="form-control" placeholder="Email" required="" autofocus="">
+						</div>
+						<div class="form-group">
+							<label for="inputUser">User</label>
 							<input type="text" id="inputUser" class="form-control" placeholder="User" required="" autofocus="">
 						</div>
 						<div class="form-group">
-							<label for="inputPassword" class="sr-only">Password</label>
-							<input type="password" id="inputPassword" class="form-control" placeholder="Password" required="">
-							<input type="checkbox" value="remember-me" id="rememberMe"> Remember me
+							<label for="inputPassword">Password</label>
+                            <input type="password" id="inputPassword" class="form-control" placeholder="Password" required="">
+                            <br>
+                            <input type="password" id="inputPassword_repeat" class="form-control" placeholder="Repeat Password" required="">
 						</div>
-						<div class="form-group">
+						<div class="form-group text-center">
 							<div id="textError" class="alert-danger" style="display: none"></div>
 						</div>
-						<button class="btn btn-lg btn-primary btn-block" type="submit" id="signIn">Sign in</button>
-					</form>
-					<a href="/register.html" class="text-muted">No account? Register here!</a>
+						<button class="btn btn-lg btn-primary btn-block" type="submit" id="register">Register</button>
+                    </form>
+                    <div class="text-center">
+                        <a href="/" class="text-muted ">Already have an account? Log in here!</a>
+                    </div>
 				</div>
 			</div>
 		</div>
 	</div>
 	
-	<script src="./js/index.js"></script>
+	<script src="./js/register.js"></script>
 </body>
 </html>

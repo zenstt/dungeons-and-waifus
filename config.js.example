@@ -1,0 +1,11 @@
+"use strict";
+const conexion = {
+	mongo:{
+		id:'foo',
+		pass:'bar',
+		url:'foobar'
+	},
+	TOKEN_KEY: 'foobar'
+}
+conexion.mongo_url = 'mongodb://' + conexion.mongo.id + ':' + conexion.mongo.pass + '@' + conexion.mongo.url;
+module.exports = conexion;

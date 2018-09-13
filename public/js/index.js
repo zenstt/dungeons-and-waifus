@@ -2,10 +2,10 @@
 $(document).ready(function () {
     let timer = null;
     let last_user = localStorage.getItem('user_selected');
-    if (last_user){
+    if (last_user) {
         $('#inputUser').val(last_user);
-        $('#rememberMe').prop("checked",true);
-    } 
+        $('#rememberMe').prop("checked", true);
+    }
     $('#signIn').click(function (e) {
         let user = $('#inputUser').val();
         let pass = $('#inputPassword').val();
@@ -35,7 +35,7 @@ $(document).ready(function () {
                             if (timer) clearTimeout(timer);
                             timer = setTimeout(function () {
                                 $('#textError').fadeOut();
-                            }, 2000);
+                            }, 5000);
                         }
                     } else {
                         $('#textError').text(data.err);
@@ -43,7 +43,7 @@ $(document).ready(function () {
                         if (timer) clearTimeout(timer);
                         timer = setTimeout(function () {
                             $('#textError').fadeOut();
-                        }, 2000);
+                        }, 5000);
                     }
                 },
                 error: function () {
@@ -52,12 +52,20 @@ $(document).ready(function () {
                     if (timer) clearTimeout(timer);
                     timer = setTimeout(function () {
                         $('#textError').fadeOut();
-                    }, 2000);
+                    }, 5000);
                 }
             });
         } else {
-            if (!user) $('#inputUser').addClass('is-invalid');
-            if (!pass) $('#inputPassword').addClass('is-invalid');
+            if (!user) {
+                $('#inputUser').addClass('is-invalid');
+            } else {
+                $('#inputUser').removeClass('is-invalid');
+            }
+            if (!pass) {
+                $('#inputPassword').addClass('is-invalid');
+            } else {
+                $('#inputPassword').removeClass('is-invalid');
+            }
         }
     });
 })

@@ -7,7 +7,7 @@
         <div class="grid">
             <div class="row"  ng-repeat="box in map track by $index">
                 <div class="box" ng-repeat="box2 in box track by $index">
-                    <div class="inner" id="{{box2.id}}">{{box2.val}}</div>
+                    <div class="inner" ng-style="box2.style" data-html="true" id="{{box2.id}}" data-toggle="{{(box2.title)?'tooltip':''}}" title="{{box2.title}}">{{box2.val}}</div>
                 </div>
             </div>
             X:{{data.position.x}} Y: {{data.position.y}}
